@@ -33,22 +33,39 @@ app.renderer.backgroundColor = 0x111111;
 
 const scene = new Container();
 
+
+
+const mask = new Graphics();
+mask.beginFill(0x111111);
+mask.drawRect(0, 0, gameSize[0], gameSize[1]);
+mask.endFill();
+
+scene.addChild(mask);
+
+
+
 const dark = new Graphics();
 dark.beginFill(0x111111);
 dark.drawRect(0, 0, gameSize[0], gameSize[1]);
 dark.endFill();
 
 const darkIn = tweenManager.createTween(dark);
-darkIn.to({alpha: 0.5});
-darkIn.time = 500;
-darkIn.delay = 1500;
+darkIn.to({alpha: 1});
+darkIn.time = 1;
 
+const darkPackshot = tweenManager.createTween(dark);
+darkPackshot.to({alpha: 0.5});
+darkPackshot.time = 500;
+darkPackshot.delay = 1500;
 
 const darkOut = tweenManager.createTween(dark);
 darkOut.to({alpha: 0});
 darkOut.time = 500;
 darkOut.delay = 500;
-darkOut.start();
+
+scene.addChild(dark);
+
+
 
 //Load an image and run the `setup` function when it's done
 loader
@@ -57,6 +74,8 @@ loader
     .add("images/austin_idle.json")
     .add("images/austin_clap.json")
     .load(setup);
+
+
 
 //Add sprite to parent and return
 function drawItem(name, anchor, position, parent){
@@ -68,6 +87,7 @@ function drawItem(name, anchor, position, parent){
         sprite.y = position[1];
         sprite.anchor.x = anchor[0];
         sprite.anchor.y = anchor[1];
+        sprite.mask = mask;
 
         parent.addChild(sprite);
 
@@ -138,7 +158,6 @@ function setup() {
         austin_idle.animationSpeed = 0.2;
         austin_idle.play();
         austin_idle.alpha = 1;
-
 
         austin_clap.anchor.set(0.5, 0.5);
         austin_clap.position.set(739.5, 266);
@@ -295,6 +314,7 @@ function setup() {
 
         //choice_active
 
+        
         choice_active_1 = drawItem("choice_active", [0.5, 0.5], [0, -4], choice_1);
         choice_active_1.alpha = 0;
 
@@ -314,17 +334,17 @@ function setup() {
 
         ok_1 = drawItem("ok_button", [0.5, 0.5], [0.5, 90], choice_1);
         ok_1.alpha = 0;
-        ok_1.scale.set(0.5, 0.5);
+        ok_1.scale.set(0.5);
 
         ok_1.interactive = true;
 
         okIn_1 = tweenManager.createTween(ok_1);
         okIn_1.to({width: ok_1.width * 2, height: ok_1.height * 2, alpha: 1});
-        okIn_1.time = 500;
-        okIn_1.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+        okIn_1.time = 100;
+        okIn_1.easing = PIXI.tween.Easing.inOutSine();
 
         okOut_1 = tweenManager.createTween(ok_1);
-        okOut_1.to({width: ok_1.width / 2, height: ok_1.height / 2});
+        okOut_1.to({width: ok_1.width / 2, height: ok_1.height / 2, alpha: 0});
         okOut_1.time = 100;
         okOut_1.easing = PIXI.tween.Easing.inOutSine();
 
@@ -336,11 +356,11 @@ function setup() {
 
         okIn_2 = tweenManager.createTween(ok_2);
         okIn_2.to({width: ok_2.width * 2, height: ok_2.height * 2, alpha: 1});
-        okIn_2.time = 500;
-        okIn_2.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+        okIn_2.time = 100;
+        okIn_2.easing = PIXI.tween.Easing.inOutSine();
 
         okOut_2 = tweenManager.createTween(ok_2);
-        okOut_2.to({width: ok_2.width / 2, height: ok_2.height / 2});
+        okOut_2.to({width: ok_2.width / 2, height: ok_2.height / 2, alpha: 0});
         okOut_2.time = 100;
         okOut_2.easing = PIXI.tween.Easing.inOutSine();
 
@@ -352,11 +372,11 @@ function setup() {
 
         okIn_3 = tweenManager.createTween(ok_3);
         okIn_3.to({width: ok_3.width * 2, height: ok_3.height * 2, alpha: 1});
-        okIn_3.time = 500;
-        okIn_3.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+        okIn_3.time = 100;
+        okIn_3.easing = PIXI.tween.Easing.inOutSine();
 
         okOut_3 = tweenManager.createTween(ok_3);
-        okOut_3.to({width: ok_3.width / 2, height: ok_3.height / 2});
+        okOut_3.to({width: ok_3.width / 2, height: ok_3.height / 2, alpha: 0});
         okOut_3.time = 100;
         okOut_3.easing = PIXI.tween.Easing.inOutSine();
 
@@ -445,11 +465,15 @@ function setup() {
         // buttonOver.time = 100;
         // buttonOver.easing = PIXI.tween.Easing.inOutSine();
 
-        scene.addChild(dark);
+        // scene.addChild(dark);
+        scene.setChildIndex(dark, scene.children.length - 1);
 }
 
-// scene.addChild(safeRect);
-//Add interactions
+
+
+//INTERACTIONS
+
+darkOut.start();
 darkOut.on("end", logoShow);
 function logoShow(){
 
@@ -731,8 +755,7 @@ function logoShow(){
 
                                         scene.setChildIndex(dark, scene.children.length - 4);
 
-                                        darkIn.start();
-
+                                        darkPackshot.start();
 
                                         packshotIn.start();
                                 }
@@ -743,11 +766,61 @@ function logoShow(){
 
 
 
+
+//RENDER
+
+app.stage.addChild(scene);
+
+//Fits game content to the browser window
+function resizeGame(){
+
+        darkOut.reset();
+        darkOut.start();
+
+        const w = Math.max(window.innerWidth, document.documentElement.clientWidth);
+        const h = Math.max(window.innerHeight, document.documentElement.clientHeight);
+
+        const scaleFactor = Math.min(
+            w / gameSize[0],
+            h / gameSize[1]
+        );
+
+        const newWidth = Math.ceil(gameSize[0] * scaleFactor);
+        const newHeight = Math.ceil(gameSize[1] * scaleFactor);
+
+        app.renderer.resize(newWidth, newHeight);
+        app.stage.scale.set(scaleFactor);
+
+        // let gameRatio = (gameSize[0] / gameSize[1]);
+        // let gameScale = window.innerHeight / gameSize[1];
+        //
+        // app.renderer.resize(window.innerWidth, window.innerHeight);
+        //
+        // scene.height = window.innerHeight;
+        // scene.width = window.innerHeight * gameRatio;
+        //
+        // scene.x = (window.innerWidth - gameSize[0] * gameScale) / 2;
+
+        // logo.scale.set(1 / gameScale);
+        // app.stage.addChild(logo);
+        // logo.alpha = 0;
+        // logo.y = scene.y + 60;
+}
+// window.addEventListener("resize", resizeGame);
+loader.onComplete.add(resizeGame);
+// resizeGame();
+
+window.onresize = (function(){
+
+        darkIn.reset();
+        darkIn.start();
+
+        darkIn.on("end", resizeGame);
+})
+
 //Make stage interactive so you can click on it too
 window.interactive = true;
 window.hitArea = app.renderer.screen;
-
-app.stage.addChild(scene);
 
 //Get true if loader ends
 let loadingComplete = false;
