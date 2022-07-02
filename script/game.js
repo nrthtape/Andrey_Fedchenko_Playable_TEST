@@ -29,15 +29,6 @@ document.body.appendChild(app.view);
 app.renderer.backgroundColor = 0x111111;
 
 
-let detect = new MobileDetect(window.navigator.userAgent);
-
-console.log("Mobile: " + detect.mobile());       // телефон или планшет
-console.log("Phone: " + detect.phone());         // телефон
-console.log("Tablet: " + detect.tablet());       // планшет
-console.log("OS: " + detect.os());               // операционная система
-console.log("userAgent: " + detect.userAgent()); // userAgent
-
-
 //Add scene
 
 const scene = new Container();
@@ -479,6 +470,27 @@ function setup() {
 
 
 
+const detect = new MobileDetect(window.navigator.userAgent);
+
+function openStore(){
+
+    let href;
+
+    if (detect.os() === "iOS"){
+        href = "https://apps.apple.com/RU/app/id1195621598?mt=8";
+    }
+    else if (detect.os() === "AndroidOS"){
+        href = "https://go.onelink.me/app/e35c91b";
+    }
+    else{
+        href = "https://game.playrix.com/homescapes/lp/hs001v1";
+    }
+
+    window.open(href);
+}
+
+
+
 //INTERACTIONS
 
 darkOut.start();
@@ -507,10 +519,7 @@ function logoShow(){
         // logoOut.start();
     });
 
-    logo.on("pointerdown", function(){
-
-
-    });
+    logo.on("pointerdown", openStore);
 
     //button interactions
 
@@ -535,12 +544,7 @@ function logoShow(){
         // buttonLoop.start();
     });
 
-    button.on("pointerdown", function(){
-
-        const href = "https://www.playrix.com/ru/games/homescapes";
-
-        window.open(href);
-    });
+    button.on("pointerdown", openStore);
 
     logoIn.on("end", hammerShow);
     function hammerShow(){
