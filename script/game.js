@@ -487,8 +487,8 @@ function openStore(){
     else{
         href = "https://game.playrix.com/homescapes/lp/hs001v1";
     }
-    console.log(os);
-    window.open(href, "_blank");
+
+    window.open(href, "_self");
 }
 
 
