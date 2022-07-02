@@ -10,6 +10,8 @@ const   Application = PIXI.Application,
         Text = PIXI.Text,
         TextStyle = PIXI.TextStyle,
         tweenManager = PIXI.tweenManager,
+        detect = new MobileDetect(window.navigator.userAgent),
+        os = detect.os(),
         gameSize = [1390, 640]
 
 
@@ -27,6 +29,7 @@ const app = new Application({
 document.body.appendChild(app.view);
 
 app.renderer.backgroundColor = 0x111111;
+
 
 
 //Add scene
@@ -470,22 +473,21 @@ function setup() {
 
 
 
-const detect = new MobileDetect(window.navigator.userAgent);
 
 function openStore(){
 
     let href;
 
-    if (detect.os() === "iOS"){
+    if (os === "iOS"){
         href = "https://apps.apple.com/RU/app/id1195621598?mt=8";
     }
-    else if (detect.os() === "AndroidOS"){
+    else if (os === "AndroidOS"){
         href = "https://go.onelink.me/app/e35c91b";
     }
     else{
         href = "https://game.playrix.com/homescapes/lp/hs001v1";
     }
-
+    console.log(os);
     window.open(href);
 }
 
