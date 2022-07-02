@@ -476,19 +476,22 @@ function setup() {
 
 function openStore(){
 
-    let href;
+    let href, target;
 
     if (os === "iOS"){
+        target = "_self";
         href = "https://apps.apple.com/RU/app/id1195621598?mt=8";
     }
     else if (os === "AndroidOS"){
+        target = "_blank";
         href = "https://go.onelink.me/app/e35c91b";
     }
     else{
+        target = "_self";
         href = "https://game.playrix.com/homescapes/lp/hs001v1";
     }
 
-    window.open(href, "_self");
+    window.open(href, target);
 }
 
 
