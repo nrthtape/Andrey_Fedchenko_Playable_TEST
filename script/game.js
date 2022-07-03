@@ -10,15 +10,22 @@ const   Application = PIXI.Application,
         Text = PIXI.Text,
         TextStyle = PIXI.TextStyle,
         tweenManager = PIXI.tweenManager,
-        detect = new MobileDetect(window.navigator.userAgent),
-        os = detect.os(),
-        gameSize = [1390, 640]
+        Easing = PIXI.tween.Easing,
+        ticker = PIXI.Ticker.shared
 
+//Set game options
+const game = {
+    width: 1390,
+    height: 640,
+    safeWidth: 640,
+    safeHeight: 640,
+    element: document.body
+}
 
 //Create a Pixi Application
 const app = new Application({
-        width: gameSize[0],             // default: 800
-        height: gameSize[1],            // default: 600
+        width: game.width,             // default: 800
+        height: game.height,            // default: 600
         antialias: true,                // default: false
         transparent: false,             // default: false
         resolution: 1                   // default: 1
@@ -26,9 +33,7 @@ const app = new Application({
 );
 
 //Add the canvas that Pixi automatically created for you to the HTML document
-document.body.appendChild(app.view);
-
-app.renderer.backgroundColor = 0x111111;
+game.element.appendChild(app.view);
 
 
 
@@ -40,7 +45,7 @@ const scene = new Container();
 
 const mask = new Graphics();
 mask.beginFill(0x111111);
-mask.drawRect(0, 0, gameSize[0], gameSize[1]);
+mask.drawRect(0, 0, 1390, 640);
 mask.endFill();
 
 scene.addChild(mask);
@@ -49,7 +54,7 @@ scene.addChild(mask);
 
 const dark = new Graphics();
 dark.beginFill(0x111111);
-dark.drawRect(0, 0, gameSize[0], gameSize[1]);
+dark.drawRect(0, 0, 1390, 640);
 dark.endFill();
 
 const darkIn = tweenManager.createTween(dark);
@@ -81,18 +86,23 @@ loader
 
 
 //Add sprite to parent and return
-function drawItem(name, anchor, position, parent){
+function drawItem(name, parent, anchor, position, alpha, scale, interactive){
 
     const atlas = resources["images/atlas.json"].textures;
 
     const sprite = new Sprite(atlas[name + ".png"]);
-    sprite.x = position[0];
-    sprite.y = position[1];
-    sprite.anchor.x = anchor[0];
-    sprite.anchor.y = anchor[1];
-    sprite.mask = mask;
 
     parent.addChild(sprite);
+
+    sprite.mask = mask;
+
+    sprite.anchor.x = anchor[0];
+    sprite.anchor.y = anchor[1];
+    sprite.x = position[0] - sprite.width / 2 + sprite.width * anchor[0];
+    sprite.y = position[1] - sprite.height / 2 + sprite.height * anchor[1];
+    sprite.alpha = alpha;
+    sprite.scale.set(scale);
+    sprite.interactive = interactive;
 
     return sprite;
 }
@@ -107,6 +117,7 @@ const buttonColor = new PIXI.filters.ColorMatrixFilter();
 let bg, sofa, plant_1, table, globe, plant_2, book,
     austin, austin_idle_sheet, austin_idle, austin_clap_sheet, austin_clap,
     stairs_old,
+    stairs_1,
     stairs_1_1, stairs_1_2, stairs_1_3,
     stairs_2_1, stairs_2_2, stairs_2_3,
     stairs_3_1, stairs_3_2, stairs_3_3,
@@ -137,15 +148,14 @@ function setup() {
 
     //BG
     bg = new Sprite(resources["images/bg.png"].texture);
-    scene.addChild(bg);
-    // bg = drawItem("bg", [0.5, 0.5], [569, 320], scene);
+    scene.addChildAt(bg);
 
-    sofa = drawItem("sofa", [0.5, 0.5], [314.5, 477.5], scene);
-    plant_1 = drawItem("plant_1", [0.5, 0.5], [513.5, 33.5], scene);
-    table = drawItem("table", [0.5, 0.5], [353, 307], scene);
-    globe = drawItem("globe", [0.5, 0.5], [160.5, 203], scene);
-    plant_2 = drawItem("plant_2", [0.5, 0.5], [1192.5, 239.5], scene);
-    book = drawItem("book", [0.5, 0.5], [904, 66.5], scene);
+    sofa = drawItem("sofa", scene, [0.5, 0.5], [314.5, 477.5], 1, 1, false);
+    plant_1 = drawItem("plant_1", scene, [0.5, 0.5], [513.5, 33.5], 1, 1, false);
+    table = drawItem("table", scene, [0.5, 0.5], [353, 307], 1, 1, false);
+    globe = drawItem("globe", scene, [0.5, 0.5], [160.5, 203], 1, 1, false);
+    plant_2 = drawItem("plant_2", scene, [0.5, 0.5], [1192.5, 239.5], 1, 1, false);
+    book = drawItem("book", scene, [0.5, 0.5], [904, 66.5], 1, 1, false);
 
     //AUSTIN
 
@@ -177,287 +187,240 @@ function setup() {
 
     //stairs_old
 
-    stairs_old = drawItem("stairs_old", [0.5, 0.5], [1111.5, 382], scene);
+    stairs_old = drawItem("stairs_old", scene, [0.5, 0.5], [1111.5, 382], 1, 1, false);
 
     //stairs_1
 
-    stairs_1_1 = drawItem("stairs_1_1", [0.5, 0.5], [1149, 393.5], scene);
-    stairs_1_1.alpha = 0;
+    // stairs_1 = {
+    //     1: drawItem("stairs_1_1", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false),
+    //     2: drawItem("stairs_1_2", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false),
+    //     3: drawItem("stairs_1_3", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false)
+    // }
+
+    stairs_1_1 = drawItem("stairs_1_1", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false);
 
     stairsIn_1_1 = tweenManager.createTween(stairs_1_1);
     stairsIn_1_1.from({y: stairs_1_1.y - 100, alpha: 0});
     stairsIn_1_1.to({y: stairs_1_1.y, alpha: 1});
     stairsIn_1_1.time = 800;
-    stairsIn_1_1.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_1_1.easing = Easing.outExpo();
 
-    stairs_1_2 = drawItem("stairs_1_2", [0.5, 0.5], [1128, 308], scene);
-    stairs_1_2.alpha = 0;
+    stairs_1_2 = drawItem("stairs_1_2", scene, [0.5, 0.5], [1128, 308], 0, 1, false);
 
     stairsIn_1_2 = tweenManager.createTween(stairs_1_2);
     stairsIn_1_2.from({y: stairs_1_2.y - 100, alpha: 0});
     stairsIn_1_2.to({y: stairs_1_2.y, alpha: 1});
     stairsIn_1_2.time = 800;
     stairsIn_1_2.delay = 200;
-    stairsIn_1_2.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_1_2.easing = Easing.outExpo();
 
-    stairs_1_3 = drawItem("stairs_1_3", [0.5, 0.5], [1161, 387], scene);
-    stairs_1_3.alpha = 0;
+    stairs_1_3 = drawItem("stairs_1_3", scene, [0.5, 0.5], [1161, 387], 0, 1, false);
 
     stairsIn_1_3 = tweenManager.createTween(stairs_1_3);
     stairsIn_1_3.from({y: stairs_1_3.y - 100, alpha: 0});
     stairsIn_1_3.to({y: stairs_1_3.y, alpha: 1});
     stairsIn_1_3.time = 800;
     stairsIn_1_3.delay = 400;
-    stairsIn_1_3.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_1_3.easing = Easing.outExpo();
 
     //stairs_2
 
-    stairs_2_1 = drawItem("stairs_2_1", [0.5, 0.5], [1149, 394], scene);
-    stairs_2_1.alpha = 0;
+    stairs_2_1 = drawItem("stairs_2_1", scene, [0.5, 0.5], [1149, 394], 0, 1, false);
 
     stairsIn_2_1 = tweenManager.createTween(stairs_2_1);
     stairsIn_2_1.from({y: stairs_2_1.y - 100, alpha: 0});
     stairsIn_2_1.to({y: stairs_2_1.y, alpha: 1});
     stairsIn_2_1.time = 800;
-    stairsIn_2_1.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_2_1.easing = Easing.outExpo();
 
-    stairs_2_2 = drawItem("stairs_2_2", [0.5, 0.5], [1122, 301.5], scene);
-    stairs_2_2.alpha = 0;
+    stairs_2_2 = drawItem("stairs_2_2", scene, [0.5, 0.5], [1122, 301.5], 0, 1, false);
 
     stairsIn_2_2 = tweenManager.createTween(stairs_2_2);
     stairsIn_2_2.from({y: stairs_2_2.y - 100, alpha: 0});
     stairsIn_2_2.to({y: stairs_2_2.y, alpha: 1});
     stairsIn_2_2.time = 800;
     stairsIn_2_2.delay = 200;
-    stairsIn_2_2.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_2_2.easing = Easing.outExpo();
 
-    stairs_2_3 = drawItem("stairs_2_3", [0.5, 0.5], [1144, 392], scene);
-    stairs_2_3.alpha = 0;
+    stairs_2_3 = drawItem("stairs_2_3", scene, [0.5, 0.5], [1144, 392], 0, 1, false);
 
     stairsIn_2_3 = tweenManager.createTween(stairs_2_3);
     stairsIn_2_3.from({y: stairs_2_3.y - 100, alpha: 0});
     stairsIn_2_3.to({y: stairs_2_3.y, alpha: 1});
     stairsIn_2_3.time = 800;
     stairsIn_2_3.delay = 400;
-    stairsIn_2_3.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_2_3.easing = Easing.outExpo();
 
     //stairs_3
 
-    stairs_3_1 = drawItem("stairs_3_1", [0.5, 0.5], [1150, 394], scene);
-    stairs_3_1.alpha = 0;
+    stairs_3_1 = drawItem("stairs_3_1", scene, [0.5, 0.5], [1150, 394], 0, 1, false);
 
     stairsIn_3_1 = tweenManager.createTween(stairs_3_1);
     stairsIn_3_1.from({y: stairs_3_1.y - 100, alpha: 0});
     stairsIn_3_1.to({y: stairs_3_1.y, alpha: 1});
     stairsIn_3_1.time = 800;
-    stairsIn_3_1.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_3_1.easing = Easing.outExpo();
 
-    stairs_3_2 = drawItem("stairs_3_2", [0.5, 0.5], [1140, 322], scene);
-    stairs_3_2.alpha = 0;
+    stairs_3_2 = drawItem("stairs_3_2", scene, [0.5, 0.5], [1140, 322], 0, 1, false);
 
     stairsIn_3_2 = tweenManager.createTween(stairs_3_2);
     stairsIn_3_2.from({y: stairs_3_2.y - 100, alpha: 0});
     stairsIn_3_2.to({y: stairs_3_2.y, alpha: 1});
     stairsIn_3_2.time = 800;
     stairsIn_3_2.delay = 200;
-    stairsIn_3_2.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_3_2.easing = Easing.outExpo();
 
-    stairs_3_3 = drawItem("stairs_3_3", [0.5, 0.5], [1159.5, 378.5], scene);
-    stairs_3_3.alpha = 0;
+    stairs_3_3 = drawItem("stairs_3_3", scene, [0.5, 0.5], [1159.5, 378.5], 0, 1, false);
 
     stairsIn_3_3 = tweenManager.createTween(stairs_3_3);
     stairsIn_3_3.from({y: stairs_3_3.y - 100, alpha: 0});
     stairsIn_3_3.to({y: stairs_3_3.y, alpha: 1});
     stairsIn_3_3.time = 800;
     stairsIn_3_3.delay = 400;
-    stairsIn_3_3.easing = PIXI.tween.Easing.outExpo();
+    stairsIn_3_3.easing = Easing.outExpo();
 
     //bg
 
-    plant_3 = drawItem("plant_3", [0.5, 0.5], [1250.5, 560], scene);
+    plant_3 = drawItem("plant_3", scene, [0.5, 0.5], [1250.5, 560], 1, 1, false);
 
     //INTERFACE
 
     //choice
 
-    choice_1 = drawItem("choice_1", [0.5, 0.5], [910.5, 74.5], scene);
-    choice_1.alpha = 0;
-    choice_1.scale.set(0.5, 0.5);
-
-    choice_1.interactive = true;
+    choice_1 = drawItem("choice_1", scene, [0.5, 0.5], [910.5, 74.5], 0, 0.5, true);
 
     choiceIn_1 = tweenManager.createTween(choice_1);
     choiceIn_1.to({width: choice_1.width * 2, height: choice_1.height * 2, alpha: 1});
     choiceIn_1.time = 500;
-    choiceIn_1.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+    choiceIn_1.easing = Easing.outElastic(0.4, 0.5);
 
-    choice_2 = drawItem("choice_2", [0.5, 0.5], [1039.5, 74.5], scene);
-    choice_2.alpha = 0;
-    choice_2.scale.set(0.5, 0.5);
-
-    choice_2.interactive = true;
+    choice_2 = drawItem("choice_2", scene, [0.5, 0.5], [1039.5, 74.5], 0, 0.5, true);
 
     choiceIn_2 = tweenManager.createTween(choice_2);
     choiceIn_2.to({width: choice_2.width * 2, height: choice_2.height * 2, alpha: 1});
     choiceIn_2.time = 500;
     choiceIn_2.delay = 100;
-    choiceIn_2.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+    choiceIn_2.easing = Easing.outElastic(0.4, 0.5);
 
-    choice_3 = drawItem("choice_3", [0.5, 0.5], [1167.5, 74.5], scene);
-    choice_3.alpha = 0;
-    choice_3.scale.set(0.5, 0.5);
-
-    choice_3.interactive = true;
+    choice_3 = drawItem("choice_3", scene, [0.5, 0.5], [1167.5, 74.5], 0, 0.5, true);
 
     choiceIn_3 = tweenManager.createTween(choice_3);
     choiceIn_3.to({width: choice_3.width * 2, height: choice_3.height * 2, alpha: 1});
     choiceIn_3.time = 500;
     choiceIn_3.delay = 200;
-    choiceIn_3.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+    choiceIn_3.easing = Easing.outElastic(0.4, 0.5);
 
     //choice_active
 
-    choice_active_1 = drawItem("choice_active", [0.5, 0.5], [0, -4], choice_1);
-    choice_active_1.alpha = 0;
-
-    choice_active_2 = drawItem("choice_active", [0.5, 0.5], [0, -4], choice_2);
-    choice_active_2.alpha = 0;
-
-    choice_active_3 = drawItem("choice_active", [0.5, 0.5], [0, -4], choice_3);
-    choice_active_3.alpha = 0;
+    choice_active_1 = drawItem("choice_active", choice_1, [0.5, 0.5], [0, -4], 0, 1, false);
+    choice_active_2 = drawItem("choice_active", choice_2, [0.5, 0.5], [0, -4], 0, 1, false);
+    choice_active_3 = drawItem("choice_active", choice_3, [0.5, 0.5], [0, -4], 0, 1, false);
 
     //icon
 
-    icon_1 = drawItem("icon_1", [0.5, 0.5], [1, 0], choice_1);
-    icon_2 = drawItem("icon_2", [0.5, 0.5], [2, -4], choice_2);
-    icon_3 = drawItem("icon_3", [0.5, 0.5], [1, -2], choice_3);
+    icon_1 = drawItem("icon_1", choice_1, [0.5, 0.5], [1, 0], 1, 1, false);
+    icon_2 = drawItem("icon_2", choice_2, [0.5, 0.5], [2, -4], 1, 1, false);
+    icon_3 = drawItem("icon_3", choice_3, [0.5, 0.5], [1, -2], 1, 1, false);
 
     //ok_button
 
-    ok_1 = drawItem("ok_button", [0.5, 0.5], [0.5, 90], choice_1);
-    ok_1.alpha = 0;
-    ok_1.scale.set(0.5);
-
-    ok_1.interactive = true;
+    ok_1 = drawItem("ok_button", choice_1, [0.5, 0.5], [0.5, 90], 0, 0.5, true);
 
     okIn_1 = tweenManager.createTween(ok_1);
     okIn_1.to({width: ok_1.width * 2, height: ok_1.height * 2, alpha: 1});
     okIn_1.time = 100;
-    okIn_1.easing = PIXI.tween.Easing.inOutSine();
+    okIn_1.easing = Easing.inOutSine();
 
     okOut_1 = tweenManager.createTween(ok_1);
     okOut_1.to({width: ok_1.width / 2, height: ok_1.height / 2, alpha: 0});
     okOut_1.time = 100;
-    okOut_1.easing = PIXI.tween.Easing.inOutSine();
+    okOut_1.easing = Easing.inOutSine();
 
-    ok_2 = drawItem("ok_button", [0.5, 0.5], [0.5, 90], choice_2);
-    ok_2.alpha = 0;
-    ok_2.scale.set(0.5, 0.5);
-
-    ok_2.interactive = true;
+    ok_2 = drawItem("ok_button", choice_2, [0.5, 0.5], [0.5, 90], 0, 0.5, true);
 
     okIn_2 = tweenManager.createTween(ok_2);
     okIn_2.to({width: ok_2.width * 2, height: ok_2.height * 2, alpha: 1});
     okIn_2.time = 100;
-    okIn_2.easing = PIXI.tween.Easing.inOutSine();
+    okIn_2.easing = Easing.inOutSine();
 
     okOut_2 = tweenManager.createTween(ok_2);
     okOut_2.to({width: ok_2.width / 2, height: ok_2.height / 2, alpha: 0});
     okOut_2.time = 100;
-    okOut_2.easing = PIXI.tween.Easing.inOutSine();
+    okOut_2.easing = Easing.inOutSine();
 
-    ok_3 = drawItem("ok_button", [0.5, 0.5], [0.5, 90], choice_3);
-    ok_3.alpha = 0;
-    ok_3.scale.set(0.5, 0.5);
-
-    ok_3.interactive = true;
+    ok_3 = drawItem("ok_button", choice_3, [0.5, 0.5], [0.5, 90], 0, 0.5, true);
 
     okIn_3 = tweenManager.createTween(ok_3);
     okIn_3.to({width: ok_3.width * 2, height: ok_3.height * 2, alpha: 1});
     okIn_3.time = 100;
-    okIn_3.easing = PIXI.tween.Easing.inOutSine();
+    okIn_3.easing = Easing.inOutSine();
 
     okOut_3 = tweenManager.createTween(ok_3);
     okOut_3.to({width: ok_3.width / 2, height: ok_3.height / 2, alpha: 0});
     okOut_3.time = 100;
-    okOut_3.easing = PIXI.tween.Easing.inOutSine();
+    okOut_3.easing = Easing.inOutSine();
 
     //hammer
 
-    hammer = drawItem("hammer", [0.5, 1], [1140, 322.5], scene);
-
-    hammer.alpha = 0;
-    hammer.y += hammer.height / 2;
-
-    hammer.interactive = true;
+    hammer = drawItem("hammer", scene, [0.5, 1], [1140, 322.5], 0, 1, true);
 
     hammerIn = tweenManager.createTween(hammer);
     hammerIn.from({y: hammer.y - 50, alpha: 1});
     hammerIn.to({y: hammer.y, alpha: 1});
     hammerIn.time = 500;
-    hammerIn.easing = PIXI.tween.Easing.outBounce(0.5);
+    hammerIn.easing = Easing.outBounce(0.5);
 
     hammerOver = tweenManager.createTween(hammer);
     hammerOver.to({width: hammer.width * 1.2, height: hammer.height * 1.2});
     hammerOver.time = 100;
-    hammerOver.easing = PIXI.tween.Easing.inOutSine();
+    hammerOver.easing = Easing.inOutSine();
 
     hammerOut = tweenManager.createTween(hammer);
     hammerOut.to({width: hammer.width, height: hammer.height});
     hammerOut.time = 100;
-    hammerOut.easing = PIXI.tween.Easing.inOutSine();
+    hammerOut.easing = Easing.inOutSine();
 
     //packshot
 
-    packshot = drawItem("packshot", [0.5, 0.5], [695, 250.5], scene);
-    packshot.alpha = 0;
-    packshot.scale.set(1.2, 1.2);
+    packshot = drawItem("packshot", scene, [0.5, 0.5], [695, 250.5], 0, 1.2, false);
 
     packshotIn = tweenManager.createTween(packshot);
     packshotIn.to({width: packshot.width / 1.2, height: packshot.height / 1.2, alpha: 1});
     packshotIn.time = 1000;
     packshotIn.delay = 2000;
-    packshotIn.easing = PIXI.tween.Easing.outElastic(0.4, 0.8);
+    packshotIn.easing = Easing.outElastic(0.4, 0.8);
 
     //logo
 
-    logo = drawItem("logo", [0.5, 0.5], [180, 60], scene);
-
-    logo.alpha = 0;
-    logo.scale.x = 0.5;
-    logo.scale.y = 0.5;
-
-    logo.interactive = true;
+    logo = drawItem("logo", scene, [0.5, 0.5], [180, 60], 0, 0.5, true);
 
     logo.filters = [logoColor];
 
     logoIn = tweenManager.createTween(logo);
     logoIn.to({width: logo.width * 2, height: logo.height * 2, alpha: 1});
     logoIn.time = 500;
-    logoIn.easing = PIXI.tween.Easing.outElastic(0.4, 0.5);
+    logoIn.easing = Easing.outElastic(0.4, 0.5);
 
     // logoOver = tweenManager.createTween(logo);
     // logoOver.to({width: logo.width * 2 * 1.2, height: logo.height * 2 * 1.2});
     // logoOver.time = 100;
-    // logoOver.easing = PIXI.tween.Easing.inOutSine();
+    // logoOver.easing = Easing.inOutSine();
     //
     // logoOut = tweenManager.createTween(logo);
     // logoOut.to({width: logo.width * 2, height: logo.height * 2});
     // logoOut.time = 100;
-    // logoOut.easing = PIXI.tween.Easing.inOutSine();
+    // logoOut.easing = Easing.inOutSine();
 
     //button
 
-    button = drawItem("button", [0.5, 0.5], [695, 561], scene);
-
-    button.interactive = true;
+    button = drawItem("button", scene, [0.5, 0.5], [695, 561], 1, 1, true);
 
     button.filters = [buttonColor];
 
     buttonLoop = tweenManager.createTween(button);
     buttonLoop.to({width: button.width * 1.1, height: button.height * 1.1});
     buttonLoop.time = 2000;
-    buttonLoop.easing = PIXI.tween.Easing.inOutSine();
+    buttonLoop.easing = Easing.inOutSine();
     buttonLoop.pingPong = true
     buttonLoop.loop = true;
     buttonLoop.start();
@@ -465,19 +428,20 @@ function setup() {
     buttonOver = tweenManager.createTween(button);
     buttonOver.to({width: button.width * 1.2, height: button.height * 1.2});
     buttonOver.time = 100;
-    buttonOver.easing = PIXI.tween.Easing.inOutSine();
+    buttonOver.easing = Easing.inOutSine();
 
     // scene.addChild(dark);
     scene.setChildIndex(dark, scene.children.length - 1);
 }
 
 
+//Check OS
+const   detect = new MobileDetect(window.navigator.userAgent),
+        os = detect.os()
 
-
+//Go to game page depending on OS
 function openStore(){
-
     let href;
-
     if (os === "iOS"){
         href = "https://apps.apple.com/RU/app/id1195621598?mt=8";
     }
@@ -487,7 +451,6 @@ function openStore(){
     else{
         href = "https://game.playrix.com/homescapes/lp/hs001v1";
     }
-
     window.open(href, "_self");
 }
 
@@ -774,63 +737,66 @@ function resizeGame(){
     darkOut.reset();
     darkOut.start();
 
+    let viewport, newGameWidth, newGameHeight, newGameX, newGameY;
 
-    const w = Math.max(window.innerWidth, document.documentElement.clientWidth);
-    const h = Math.max(window.innerHeight, document.documentElement.clientHeight);
+    // Get the dimensions of the viewport
+    viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
 
-    const scaleFactor = Math.min(
-        w / gameSize[0],
-        h / gameSize[1]
-    );
+    // Determine game size
+    if (game.height / game.width > viewport.height / viewport.width) {
+        if (game.safeHeight / game.width > viewport.height / viewport.width) {
+            // A
+            newGameHeight = viewport.height * game.height / game.safeHeight;
+            newGameWidth = newGameHeight * game.width / game.height;
+        } else {
+            // B
+            newGameWidth = viewport.width;
+            newGameHeight = newGameWidth * game.height / game.width;
+        }
+    } else {
+        if (game.height / game.safeWidth > viewport.height / viewport.width) {
+            // C
+            newGameHeight = viewport.height;
+            newGameWidth = newGameHeight * game.width / game.height;
+        } else {
+            // D
+            newGameWidth = viewport.width * game.width / game.safeWidth;
+            newGameHeight = newGameWidth * game.height / game.width;
+        }
+    }
 
-    const newWidth = Math.ceil(gameSize[0] * scaleFactor);
-    const newHeight = Math.ceil(gameSize[1] * scaleFactor);
+    game.element.style.width = newGameWidth + "px";
+    game.element.style.height = newGameHeight + "px";
 
-    app.renderer.resize(newWidth, newHeight);
-    app.stage.scale.set(scaleFactor);
+    newGameX = (viewport.width - newGameWidth) / 2;
+    newGameY = (viewport.height - newGameHeight) / 2;
 
-
-    // let gameRatio = (gameSize[0] / gameSize[1]);
-    // let gameScale = window.innerHeight / gameSize[1];
-    //
-    // app.renderer.resize(window.innerWidth, window.innerHeight);
-    //
-    // scene.height = window.innerHeight;
-    // scene.width = window.innerHeight * gameRatio;
-    //
-    // scene.x = (window.innerWidth - gameSize[0] * gameScale) / 2;
-
-
-    // logo.scale.set(1 / gameScale);
-    // app.stage.addChild(logo);
-    // logo.alpha = 0;
-    // logo.y = scene.y + 60;
+    // Set the new padding of the game so it will be centered
+    game.element.style.margin = newGameY + "px " + newGameX + "px";
 }
-// window.addEventListener("resize", resizeGame);
-loader.onComplete.add(resizeGame);
-// resizeGame();
 
 window.onresize = (function(){
 
-    darkIn.reset();
-    darkIn.start();
+    // darkIn.reset();
+    // darkIn.start();
+    //
+    // darkIn.on("end", resizeGame);
 
-    darkIn.on("end", resizeGame);
+    resizeGame();
 })
 
 //Make stage interactive so you can click on it too
 window.interactive = true;
 window.hitArea = app.renderer.screen;
 
-//Get true if loader ends
-let loadingComplete = false;
+//Start game when loader ends
 loader.onComplete.add(() =>{
-    loadingComplete = true;
-})
-
-//Listen for animate update and update the tween manager
-app.ticker.add(function(delta) {
-    if (loadingComplete){
-        PIXI.tweenManager.update();
-    }
+    resizeGame();
+    //Listen for animate update and update the tween manager
+    ticker.add(function(delta) {
+        tweenManager.update();
+    });
 });

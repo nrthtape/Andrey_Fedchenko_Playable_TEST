@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "mobile-detect": "^1.4.5",
+    "pixi-tween": "^0.2.0",
+    "pixi.js": "^6.4.2"
+  }
+}
