@@ -753,15 +753,6 @@ function resizeGame(){
             right.y = 0;
 
             button.y = 561 + fixH;
-
-
-            packshot.scale.set(1);
-            packshot.y = 250.5 + fixH;
-
-            right.x = 0;
-
-            choices.y = 0;
-            choices.x = 0;
         }
         else{
             logo.scale.set(1.3);
@@ -774,14 +765,6 @@ function resizeGame(){
             right.y = 100;
 
             button.y = game.height - (game.safeHeight - 561) - 50;
-
-
-            packshot.scale.set(0.9);
-            packshot.y = 250.5 + fixH + 50;
-
-            right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
-            choices.y = 300;
-            choices.x = right.x / 2 + 50;
         }
     }
     else{
@@ -796,7 +779,20 @@ function resizeGame(){
         button.y = 561 + fixH;
 
         right.y = 0;
+    }
 
+    // resize right
+
+    if ((newGameWidth) / 2 * gameScale > viewport.width){
+
+        packshot.scale.set(0.9);
+        packshot.y = 250.5 + fixH + 50;
+
+        right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
+        choices.y = 300;
+        choices.x = right.x / 2 + 50;
+    }
+    else{
 
         packshot.scale.set(1);
         packshot.y = 250.5 + fixH;
@@ -805,28 +801,6 @@ function resizeGame(){
 
         choices.y = 0;
         choices.x = 0;
-    }
-
-    // resize right
-
-    if ((newGameWidth) / 2 * gameScale > viewport.width){
-
-        // packshot.scale.set(0.9);
-        // packshot.y = 250.5 + fixH + 50;
-        //
-        // right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
-        // choices.y = 300;
-        // choices.x = right.x / 2 + 50;
-    }
-    else{
-
-        // packshot.scale.set(1);
-        // packshot.y = 250.5 + fixH;
-        //
-        // right.x = 0;
-        //
-        // choices.y = 0;
-        // choices.x = 0;
     }
 
     logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
