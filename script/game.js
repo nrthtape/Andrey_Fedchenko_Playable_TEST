@@ -698,10 +698,10 @@ function resizeGame(){
         width: window.innerWidth,
         height: window.innerHeight
     };
-
-    if (viewport.width > detect.maxPhoneWidth){
-        viewport.width = detect.maxPhoneWidth;
-    }
+    //
+    // if (detect.phone() === true){
+    //     viewport.width = viewport.width / ;
+    // }
 
     // Determine game size
     if (game.height / game.width > viewport.height / viewport.width) {
@@ -819,15 +819,15 @@ function resizeGame(){
     game.element.style.margin = newGameY + "px " + newGameX + "px";
 }
 
-window.onresize = (function(){
-
-    darkIn.reset();
-    darkIn.start();
-
-    darkIn.on("end", resizeGame);
-
-    // resizeGame();
-})
+// window.onresize = (function(){
+//
+//     darkIn.reset();
+//     darkIn.start();
+//
+//     darkIn.on("end", resizeGame);
+//
+//     // resizeGame();
+// })
 
 //Make stage interactive so you can click on it too
 window.interactive = true;
@@ -835,6 +835,8 @@ window.hitArea = app.renderer.screen;
 
 //Start game when loader ends
 loader.onComplete.add(function(){
+    window.addEventListener("resize", resizeGame);
+
     resizeGame();
     //Listen for animate update and update the tween manager
     ticker.add(function(){
