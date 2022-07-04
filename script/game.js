@@ -782,22 +782,22 @@ function resizeGame(){
 
     if ((newGameWidth) / 2 * gameScale > viewport.width){
 
-        // packshot.scale.set(0.9);
-        // packshot.y = 250.5 + fixH + 50;
-        //
-        // right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
-        // choices.y = 300;
-        // choices.x = right.x / 2 + 50;
+        packshot.scale.set(0.9);
+        packshot.y = 250.5 + fixH + 50;
+
+        right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
+        choices.y = 300;
+        choices.x = right.x / 2 + 50;
     }
     else{
 
-        // packshot.scale.set(1);
-        // packshot.y = 250.5 + fixH;
-        //
-        // right.x = 0;
-        //
-        // choices.y = 0;
-        // choices.x = 0;
+        packshot.scale.set(1);
+        packshot.y = 250.5 + fixH;
+
+        right.x = 0;
+
+        choices.y = 0;
+        choices.x = 0;
     }
 
     logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
