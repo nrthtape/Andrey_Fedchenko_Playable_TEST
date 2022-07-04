@@ -35,7 +35,7 @@ const app = new Application({
 );
 
 //Add the canvas that Pixi automatically created for you to the HTML document
-game.element.appendChild(app.view);
+document.body.appendChild(app.view);
 
 
 
@@ -696,7 +696,7 @@ function resizeGame(){
     // Get the dimensions of the viewport
     viewport = {
 
-        width: (window.innerWidth > 0) ? window.innerWidth : screen.width,
+        width: window.innerWidth,
         height: window.innerHeight
     };
 
