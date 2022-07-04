@@ -695,8 +695,8 @@ function resizeGame(){
 
     // Get the dimensions of the viewport
     viewport = {
-        width: document.body.getBoundingClientRect().width,
-        height: document.body.getBoundingClientRect().height
+        width: window.innerWidth,
+        height: window.innerHeight
     };
 
     if (detect.phone() === true){
