@@ -723,14 +723,14 @@ function resizeGame(){
         }
     }
 
-    game.element.style.width = newGameWidth + "px";
-    game.element.style.height = newGameHeight + "px";
-
-    newGameX = (viewport.width - newGameWidth) / 2;
-    newGameY = (viewport.height - newGameHeight) / 2;
-
-    // Set the new padding of the game so if it will be centered
-    game.element.style.margin = newGameY + "px " + newGameX + "px";
+    // game.element.style.width = newGameWidth + "px";
+    // game.element.style.height = newGameHeight + "px";
+    //
+    // newGameX = (viewport.width - newGameWidth) / 2;
+    // newGameY = (viewport.height - newGameHeight) / 2;
+    //
+    // // Set the new padding of the game so if it will be centered
+    // game.element.style.margin = newGameY + "px " + newGameX + "px";
 
     let gameScale = (viewport.height + (game.height - game.safeHeight)) / newGameHeight;
 
@@ -805,6 +805,15 @@ function resizeGame(){
 
     logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
     packshotIn = addAnimation(packshot, "in", 0, 0, 1.2, 1000, 2000, Easing.outElastic(0.4, 0.5));
+
+    game.element.style.width = newGameWidth + "px";
+    game.element.style.height = newGameHeight + "px";
+
+    newGameX = (viewport.width - newGameWidth) / 2;
+    newGameY = (viewport.height - newGameHeight) / 2;
+
+    // Set the new padding of the game so if it will be centered
+    game.element.style.margin = newGameY + "px " + newGameX + "px";
 }
 
 window.onresize = (function(){
