@@ -16,11 +16,13 @@ const   Application = PIXI.Application,
 //Set game options
 const game = {
     width: 1390,
-    height: 640,
+    height: 1080,
     safeWidth: 640,
     safeHeight: 640,
     element: document.body
 }
+
+const fixH = (game.height - game.safeHeight) / 2;
 
 //Create a Pixi Application
 const app = new Application({
@@ -40,21 +42,32 @@ game.element.appendChild(app.view);
 //Add scene
 
 const scene = new Container();
+// scene.y += (1390 - 640) / 2;
 
+const right = new Container();
+const choices = new Container();
 
+const maskW = new Graphics();
+maskW.beginFill(0x111111);
+maskW.drawRect(0, 0, game.width, game.safeHeight);
+maskW.endFill();
+maskW.alpha = 0;
 
-const mask = new Graphics();
-mask.beginFill(0x111111);
-mask.drawRect(0, 0, 1390, 640);
-mask.endFill();
+scene.addChild(maskW);
 
-scene.addChild(mask);
+const maskH = new Graphics();
+maskH.beginFill(0x111111);
+maskH.drawRect(0, 0, game.width, game.height);
+maskH.endFill();
+maskH.alpha = 0;
+
+scene.addChild(maskH);
 
 
 
 const dark = new Graphics();
 dark.beginFill(0x111111);
-dark.drawRect(0, 0, 1390, 640);
+dark.drawRect(0, 0, game.width, game.height);
 dark.endFill();
 
 const darkIn = tweenManager.createTween(dark);
@@ -94,7 +107,7 @@ function drawItem(name, parent, anchor, position, alpha, scale, interactive){
 
     parent.addChild(sprite);
 
-    sprite.mask = mask;
+    // sprite.mask = mask;
 
     sprite.anchor.x = anchor[0];
     sprite.anchor.y = anchor[1];
@@ -107,20 +120,60 @@ function drawItem(name, parent, anchor, position, alpha, scale, interactive){
     return sprite;
 }
 
+//Add sequence
+function addSequence(name, parent, anchor, position, alpha, scale, speed, interactive){
 
+    const sheet = resources["images/" + name + ".json"].spritesheet;
+
+    const sequence = new PIXI.AnimatedSprite(sheet.animations["Default_Pass8624_Main."]);
+
+    parent.addChild(sequence);
+
+    // sequence.mask = mask;
+
+    sequence.anchor.x = anchor[0];
+    sequence.anchor.y = anchor[1];
+    sequence.x = position[0] - sequence.width / 2 + sequence.width * anchor[0];
+    sequence.y = position[1] - sequence.height / 2 + sequence.height * anchor[1];
+    sequence.alpha = alpha;
+    sequence.scale.set(-scale, scale);
+    sequence.animationSpeed = speed;
+    sequence.interactive = interactive;
+
+    return sequence;
+}
+
+//Add tween animations
+function addAnimation(sprite, type, x, y, scale, time, delay, easing){
+
+    const tween = tweenManager.createTween(sprite);
+
+    if (type === "in"){
+
+        tween.from({x: sprite.x + x, y: sprite.y + y, width: sprite.width * scale, height: sprite.height * scale, alpha: 0})
+        tween.to({x: sprite.x, y: sprite.y, width: sprite.width, height: sprite.height, alpha: 1});
+    }
+    else if (type === "out"){
+
+        tween.from({x: sprite.x, y: sprite.y, width: sprite.width, height: sprite.height, alpha: 1});
+        tween.to({x: sprite.x + x, y: sprite.y + y, width: sprite.width * scale, height: sprite.height * scale, alpha: 0});
+    }
+
+    tween.time = time;
+    tween.delay = delay;
+    tween.easing = easing;
+
+    return tween;
+}
 
 //Add color filters
 const logoColor = new PIXI.filters.ColorMatrixFilter();
 const buttonColor = new PIXI.filters.ColorMatrixFilter();
 
 //Declare variables for images
-let bg, sofa, plant_1, table, globe, plant_2, book,
+let bg, bg2, sofa, plant_1, table, globe, plant_2, book,
     austin, austin_idle_sheet, austin_idle, austin_clap_sheet, austin_clap,
-    stairs_old,
-    stairs_1,
-    stairs_1_1, stairs_1_2, stairs_1_3,
-    stairs_2_1, stairs_2_2, stairs_2_3,
-    stairs_3_1, stairs_3_2, stairs_3_3,
+    stairs,
     plant_3,
     choice_1, choice_2, choice_3,
     choice_active, choice_active_1, choice_active_2, choice_active_3,
@@ -138,9 +191,7 @@ let logoIn, logoOver, logoOut,
     choiceIn_1, choiceIn_2, choiceIn_3,
     choiceActiveIn_1, choiceActiveIn_2, choiceActiveIn_3,
     okIn_1, okIn_2, okIn_3, okOut_1, okOut_2, okOut_3,
-    stairsIn_1_1, stairsIn_1_2, stairsIn_1_3,
-    stairsIn_2_1, stairsIn_2_2, stairsIn_2_3,
-    stairsIn_3_1, stairsIn_3_2, stairsIn_3_3,
+    stairsIn,
     packshotIn
 
 //This function will run when the image has loaded
@@ -148,161 +199,86 @@ function setup() {
 
     //BG
     bg = new Sprite(resources["images/bg.png"].texture);
+    bg.anchor.set(0.5, 0.5);
+    bg.position.set(scene.width / 2, scene.height / 2);
     scene.addChildAt(bg);
 
-    sofa = drawItem("sofa", scene, [0.5, 0.5], [314.5, 477.5], 1, 1, false);
-    plant_1 = drawItem("plant_1", scene, [0.5, 0.5], [513.5, 33.5], 1, 1, false);
-    table = drawItem("table", scene, [0.5, 0.5], [353, 307], 1, 1, false);
-    globe = drawItem("globe", scene, [0.5, 0.5], [160.5, 203], 1, 1, false);
-    plant_2 = drawItem("plant_2", scene, [0.5, 0.5], [1192.5, 239.5], 1, 1, false);
-    book = drawItem("book", scene, [0.5, 0.5], [904, 66.5], 1, 1, false);
+
+    sofa = drawItem("sofa", scene, [0.5, 0.5], [314.5, 477.5 + fixH], 1, 1, false);
+    plant_1 = drawItem("plant_1", scene, [0.5, 0.5], [513.5, 33.5 + fixH], 1, 1, false);
+    table = drawItem("table", scene, [0.5, 0.5], [353, 307 + fixH], 1, 1, false);
+    globe = drawItem("globe", scene, [0.5, 0.5], [160.5, 203 + fixH], 1, 1, false);
+    plant_2 = drawItem("plant_2", scene, [0.5, 0.5], [1192.5, 239.5 + fixH], 1, 1, false);
+    book = drawItem("book", scene, [0.5, 0.5], [904, 66.5 + fixH], 1, 1, false);
 
     //AUSTIN
 
-    austin_idle_sheet = resources["images/austin_idle.json"].spritesheet;
-    austin_clap_sheet = resources["images/austin_clap.json"].spritesheet;
+    austin = {
 
-    austin_idle = new PIXI.AnimatedSprite(austin_idle_sheet.animations["Default_Pass8624_Main."]);
-    austin_clap = new PIXI.AnimatedSprite(austin_clap_sheet.animations["Default_Pass8624_Main."]);
-
-    austin_idle.anchor.set(0.5, 0.5);
-    austin_idle.position.set(739.5, 266);
-    austin_idle.scale.x = -1;
-    austin_idle.animationSpeed = 0.2;
-    austin_idle.play();
-    austin_idle.alpha = 1;
-
-    austin_clap.anchor.set(0.5, 0.5);
-    austin_clap.position.set(739.5, 266);
-    austin_clap.scale.x = -1;
-    austin_clap.animationSpeed = 0.4;
-    austin_clap.alpha = 0;
-
-    scene.addChild(austin_idle);
-    scene.addChild(austin_clap);
-
-    // austin = drawItem("austin", [0.5, 0.5], [613.5, 266], scene);
+        idle: addSequence("austin_idle", scene, [0.5, 0.5], [739.5, 266 + fixH], 1, 1, 0.2, false),
+        clap: addSequence("austin_clap", scene, [0.5, 0.5], [739.5, 266 + fixH], 0, 1, 0.4, false)
+    }
+    austin["idle"].play();
 
     //STAIRS
 
-    //stairs_old
+    stairs = {
 
-    stairs_old = drawItem("stairs_old", scene, [0.5, 0.5], [1111.5, 382], 1, 1, false);
+        old: drawItem("stairs_old", right, [0.5, 0.5], [1111.5, 382 + fixH], 1, 1, false),
+        1.1: drawItem("stairs_1_1", right, [0.5, 0.5], [1149, 393.5 + fixH], 0, 1, false),
+        1.2: drawItem("stairs_1_2", right, [0.5, 0.5], [1128, 308 + fixH], 0, 1, false),
+        1.3: drawItem("stairs_1_3", right, [0.5, 0.5], [1161, 387 + fixH], 0, 1, false),
+        2.1: drawItem("stairs_2_1", right, [0.5, 0.5], [1149, 394 + fixH], 0, 1, false),
+        2.2: drawItem("stairs_2_2", right, [0.5, 0.5], [1122, 301.5 + fixH], 0, 1, false),
+        2.3: drawItem("stairs_2_3", right, [0.5, 0.5], [1144, 392 + fixH], 0, 1, false),
+        3.1: drawItem("stairs_3_1", right, [0.5, 0.5], [1150, 394 + fixH], 0, 1, false),
+        3.2: drawItem("stairs_3_2", right, [0.5, 0.5], [1140, 322 + fixH], 0, 1, false),
+        3.3: drawItem("stairs_3_3", right, [0.5, 0.5], [1159.5, 378.5 + fixH], 0, 1, false)
+    }
 
-    //stairs_1
+    scene.addChild(right);
 
-    // stairs_1 = {
-    //     1: drawItem("stairs_1_1", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false),
-    //     2: drawItem("stairs_1_2", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false),
-    //     3: drawItem("stairs_1_3", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false)
-    // }
+    stairsIn = {
 
-    stairs_1_1 = drawItem("stairs_1_1", scene, [0.5, 0.5], [1149, 393.5], 0, 1, false);
+        1.1: addAnimation(stairs["1.1"], "in", 0, -100, 1, 800, 0, Easing.outExpo()),
+        1.2: addAnimation(stairs["1.2"], "in", 0, -100, 1, 800, 200, Easing.outExpo()),
+        1.3: addAnimation(stairs["1.3"], "in", 0, -100, 1, 800, 400, Easing.outExpo()),
+        2.1: addAnimation(stairs["2.1"], "in", 0, -100, 1, 800, 0, Easing.outExpo()),
+        2.2: addAnimation(stairs["2.2"], "in", 0, -100, 1, 800, 200, Easing.outExpo()),
+        2.3: addAnimation(stairs["2.3"], "in", 0, -100, 1, 800, 400, Easing.outExpo()),
+        3.1: addAnimation(stairs["3.1"], "in", 0, -100, 1, 800, 0, Easing.outExpo()),
+        3.2: addAnimation(stairs["3.2"], "in", 0, -100, 1, 800, 200, Easing.outExpo()),
+        3.3: addAnimation(stairs["3.3"], "in", 0, -100, 1, 800, 400, Easing.outExpo())
+    }
 
-    stairsIn_1_1 = tweenManager.createTween(stairs_1_1);
-    stairsIn_1_1.from({y: stairs_1_1.y - 100, alpha: 0});
-    stairsIn_1_1.to({y: stairs_1_1.y, alpha: 1});
-    stairsIn_1_1.time = 800;
-    stairsIn_1_1.easing = Easing.outExpo();
+    //FG
 
-    stairs_1_2 = drawItem("stairs_1_2", scene, [0.5, 0.5], [1128, 308], 0, 1, false);
-
-    stairsIn_1_2 = tweenManager.createTween(stairs_1_2);
-    stairsIn_1_2.from({y: stairs_1_2.y - 100, alpha: 0});
-    stairsIn_1_2.to({y: stairs_1_2.y, alpha: 1});
-    stairsIn_1_2.time = 800;
-    stairsIn_1_2.delay = 200;
-    stairsIn_1_2.easing = Easing.outExpo();
-
-    stairs_1_3 = drawItem("stairs_1_3", scene, [0.5, 0.5], [1161, 387], 0, 1, false);
-
-    stairsIn_1_3 = tweenManager.createTween(stairs_1_3);
-    stairsIn_1_3.from({y: stairs_1_3.y - 100, alpha: 0});
-    stairsIn_1_3.to({y: stairs_1_3.y, alpha: 1});
-    stairsIn_1_3.time = 800;
-    stairsIn_1_3.delay = 400;
-    stairsIn_1_3.easing = Easing.outExpo();
-
-    //stairs_2
-
-    stairs_2_1 = drawItem("stairs_2_1", scene, [0.5, 0.5], [1149, 394], 0, 1, false);
-
-    stairsIn_2_1 = tweenManager.createTween(stairs_2_1);
-    stairsIn_2_1.from({y: stairs_2_1.y - 100, alpha: 0});
-    stairsIn_2_1.to({y: stairs_2_1.y, alpha: 1});
-    stairsIn_2_1.time = 800;
-    stairsIn_2_1.easing = Easing.outExpo();
-
-    stairs_2_2 = drawItem("stairs_2_2", scene, [0.5, 0.5], [1122, 301.5], 0, 1, false);
-
-    stairsIn_2_2 = tweenManager.createTween(stairs_2_2);
-    stairsIn_2_2.from({y: stairs_2_2.y - 100, alpha: 0});
-    stairsIn_2_2.to({y: stairs_2_2.y, alpha: 1});
-    stairsIn_2_2.time = 800;
-    stairsIn_2_2.delay = 200;
-    stairsIn_2_2.easing = Easing.outExpo();
-
-    stairs_2_3 = drawItem("stairs_2_3", scene, [0.5, 0.5], [1144, 392], 0, 1, false);
-
-    stairsIn_2_3 = tweenManager.createTween(stairs_2_3);
-    stairsIn_2_3.from({y: stairs_2_3.y - 100, alpha: 0});
-    stairsIn_2_3.to({y: stairs_2_3.y, alpha: 1});
-    stairsIn_2_3.time = 800;
-    stairsIn_2_3.delay = 400;
-    stairsIn_2_3.easing = Easing.outExpo();
-
-    //stairs_3
-
-    stairs_3_1 = drawItem("stairs_3_1", scene, [0.5, 0.5], [1150, 394], 0, 1, false);
-
-    stairsIn_3_1 = tweenManager.createTween(stairs_3_1);
-    stairsIn_3_1.from({y: stairs_3_1.y - 100, alpha: 0});
-    stairsIn_3_1.to({y: stairs_3_1.y, alpha: 1});
-    stairsIn_3_1.time = 800;
-    stairsIn_3_1.easing = Easing.outExpo();
-
-    stairs_3_2 = drawItem("stairs_3_2", scene, [0.5, 0.5], [1140, 322], 0, 1, false);
-
-    stairsIn_3_2 = tweenManager.createTween(stairs_3_2);
-    stairsIn_3_2.from({y: stairs_3_2.y - 100, alpha: 0});
-    stairsIn_3_2.to({y: stairs_3_2.y, alpha: 1});
-    stairsIn_3_2.time = 800;
-    stairsIn_3_2.delay = 200;
-    stairsIn_3_2.easing = Easing.outExpo();
-
-    stairs_3_3 = drawItem("stairs_3_3", scene, [0.5, 0.5], [1159.5, 378.5], 0, 1, false);
-
-    stairsIn_3_3 = tweenManager.createTween(stairs_3_3);
-    stairsIn_3_3.from({y: stairs_3_3.y - 100, alpha: 0});
-    stairsIn_3_3.to({y: stairs_3_3.y, alpha: 1});
-    stairsIn_3_3.time = 800;
-    stairsIn_3_3.delay = 400;
-    stairsIn_3_3.easing = Easing.outExpo();
-
-    //bg
-
-    plant_3 = drawItem("plant_3", scene, [0.5, 0.5], [1250.5, 560], 1, 1, false);
+    plant_3 = drawItem("plant_3", right, [0.5, 0.5], [1250.5, 560 + fixH], 1, 1, false);
 
     //INTERFACE
 
     //choice
 
-    choice_1 = drawItem("choice_1", scene, [0.5, 0.5], [910.5, 74.5], 0, 0.5, true);
+    // choice_1 = drawItem("choice_1", right, [0.5, 0.5], [910.5, 74.5 + fixH], 1, 1, true);
+    // choice_2 = drawItem("choice_2", right, [0.5, 0.5], [1039.5, 74.5 + fixH], 1, 1, true);
+    // choice_3 = drawItem("choice_3", right, [0.5, 0.5], [1167.5, 74.5 + fixH], 1, 1, true);
+
+    choice_1 = drawItem("choice_1", choices, [0.5, 0.5], [910.5, 74.5 + fixH], 0, 0.5, true);
+    choice_2 = drawItem("choice_2", choices, [0.5, 0.5], [1039.5, 74.5 + fixH], 0, 0.5, true);
+    choice_3 = drawItem("choice_3", choices, [0.5, 0.5], [1167.5, 74.5 + fixH], 0, 0.5, true);
+
+    right.addChild(choices);
 
     choiceIn_1 = tweenManager.createTween(choice_1);
     choiceIn_1.to({width: choice_1.width * 2, height: choice_1.height * 2, alpha: 1});
     choiceIn_1.time = 500;
     choiceIn_1.easing = Easing.outElastic(0.4, 0.5);
 
-    choice_2 = drawItem("choice_2", scene, [0.5, 0.5], [1039.5, 74.5], 0, 0.5, true);
-
     choiceIn_2 = tweenManager.createTween(choice_2);
     choiceIn_2.to({width: choice_2.width * 2, height: choice_2.height * 2, alpha: 1});
     choiceIn_2.time = 500;
     choiceIn_2.delay = 100;
     choiceIn_2.easing = Easing.outElastic(0.4, 0.5);
-
-    choice_3 = drawItem("choice_3", scene, [0.5, 0.5], [1167.5, 74.5], 0, 0.5, true);
 
     choiceIn_3 = tweenManager.createTween(choice_3);
     choiceIn_3.to({width: choice_3.width * 2, height: choice_3.height * 2, alpha: 1});
@@ -362,7 +338,7 @@ function setup() {
 
     //hammer
 
-    hammer = drawItem("hammer", scene, [0.5, 1], [1140, 322.5], 0, 1, true);
+    hammer = drawItem("hammer", right, [0.5, 1], [1140, 322.5 + fixH], 0, 1, true);
 
     hammerIn = tweenManager.createTween(hammer);
     hammerIn.from({y: hammer.y - 50, alpha: 1});
@@ -382,38 +358,31 @@ function setup() {
 
     //packshot
 
-    packshot = drawItem("packshot", scene, [0.5, 0.5], [695, 250.5], 0, 1.2, false);
+    packshot = drawItem("packshot", scene, [0.5, 0.5], [695, 250.5 + fixH], 0, 1, false);
 
-    packshotIn = tweenManager.createTween(packshot);
-    packshotIn.to({width: packshot.width / 1.2, height: packshot.height / 1.2, alpha: 1});
-    packshotIn.time = 1000;
-    packshotIn.delay = 2000;
-    packshotIn.easing = Easing.outElastic(0.4, 0.8);
+    // packshotIn = tweenManager.createTween(packshot);
+    // packshotIn.to({width: packshot.width / 1.2, height: packshot.height / 1.2, alpha: 1});
+    // packshotIn.time = 1000;
+    // packshotIn.delay = 2000;
+    // packshotIn.easing = Easing.outElastic(0.4, 0.8);
 
     //logo
 
-    logo = drawItem("logo", scene, [0.5, 0.5], [180, 60], 0, 0.5, true);
+    logo = drawItem("logo", scene, [0.5, 0.5], [180, 60 + fixH], 0, 1, true);
 
     logo.filters = [logoColor];
 
-    logoIn = tweenManager.createTween(logo);
-    logoIn.to({width: logo.width * 2, height: logo.height * 2, alpha: 1});
-    logoIn.time = 500;
-    logoIn.easing = Easing.outElastic(0.4, 0.5);
+    // logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
 
-    // logoOver = tweenManager.createTween(logo);
-    // logoOver.to({width: logo.width * 2 * 1.2, height: logo.height * 2 * 1.2});
-    // logoOver.time = 100;
-    // logoOver.easing = Easing.inOutSine();
-    //
-    // logoOut = tweenManager.createTween(logo);
-    // logoOut.to({width: logo.width * 2, height: logo.height * 2});
-    // logoOut.time = 100;
-    // logoOut.easing = Easing.inOutSine();
+    // logoIn = tweenManager.createTween(logo);
+    // logoIn.from({width: logo.width * 0.5, height: logo.height * 0.5, alpha: 0});
+    // logoIn.to({width: logo.width, height: logo.height, alpha: 1});
+    // logoIn.time = 500;
+    // logoIn.easing = Easing.outElastic(0.4, 0.5);
 
     //button
 
-    button = drawItem("button", scene, [0.5, 0.5], [695, 561], 1, 1, true);
+    button = drawItem("button", scene, [0.5, 0.5], [695, 561 + fixH], 1, 1, true);
 
     button.filters = [buttonColor];
 
@@ -464,7 +433,6 @@ function logoShow(){
 
     logoIn.start();
     // packshotIn.start();
-
 
     //logo interactions
 
@@ -570,12 +538,12 @@ function logoShow(){
 
                             //show stairs
 
-                            stairsIn_1_1.reset();
-                            stairsIn_1_1.start();
-                            stairsIn_1_2.reset();
-                            stairsIn_1_2.start();
-                            stairsIn_1_3.reset();
-                            stairsIn_1_3.start();
+                            for (let i in stairsIn) {
+                                if (i.substring(0, 1) === "1"){
+                                    stairsIn[i].reset();
+                                    stairsIn[i].start();
+                                }
+                            }
                         }
                     });
 
@@ -604,12 +572,12 @@ function logoShow(){
 
                             //show stairs
 
-                            stairsIn_2_1.reset();
-                            stairsIn_2_1.start();
-                            stairsIn_2_2.reset();
-                            stairsIn_2_2.start();
-                            stairsIn_2_3.reset();
-                            stairsIn_2_3.start();
+                            for (let i in stairsIn) {
+                                if (i.substring(0, 1) === "2"){
+                                    stairsIn[i].reset();
+                                    stairsIn[i].start();
+                                }
+                            }
                         }
                     });
 
@@ -638,12 +606,12 @@ function logoShow(){
 
                             //show stairs
 
-                            stairsIn_3_1.reset();
-                            stairsIn_3_1.start();
-                            stairsIn_3_2.reset();
-                            stairsIn_3_2.start();
-                            stairsIn_3_3.reset();
-                            stairsIn_3_3.start();
+                            for (let i in stairsIn) {
+                                if (i.substring(0, 1) === "3"){
+                                    stairsIn[i].reset();
+                                    stairsIn[i].start();
+                                }
+                            }
                         }
                     });
 
@@ -679,27 +647,13 @@ function logoShow(){
 
                     function hideAllStairs(){
 
-                        stairsIn_1_1.stop();
-                        stairsIn_1_2.stop();
-                        stairsIn_1_3.stop();
-                        stairsIn_2_1.stop();
-                        stairsIn_2_2.stop();
-                        stairsIn_2_3.stop();
-                        stairsIn_3_1.stop();
-                        stairsIn_3_2.stop();
-                        stairsIn_3_3.stop();
+                        for (let i in stairsIn) {
+                            stairsIn[i].stop();
+                        }
 
-                        stairs_old.alpha = 0;
-
-                        stairs_1_1.alpha = 0;
-                        stairs_1_2.alpha = 0;
-                        stairs_1_3.alpha = 0;
-                        stairs_2_1.alpha = 0;
-                        stairs_2_2.alpha = 0;
-                        stairs_2_3.alpha = 0;
-                        stairs_3_1.alpha = 0;
-                        stairs_3_2.alpha = 0;
-                        stairs_3_3.alpha = 0;
+                        for (let i in stairs) {
+                            stairs[i].alpha = 0;
+                        }
                     }
 
                     function complete(){
@@ -708,9 +662,9 @@ function logoShow(){
                         choice_2.alpha = 0;
                         choice_3.alpha = 0;
 
-                        austin_idle.alpha = 0;
-                        austin_clap.alpha = 1;
-                        austin_clap.play();
+                        austin["idle"].alpha = 0;
+                        austin["clap"].alpha = 1;
+                        austin["clap"].play();
 
                         scene.setChildIndex(dark, scene.children.length - 4);
 
@@ -764,7 +718,7 @@ function resizeGame(){
         } else {
             // D
             newGameWidth = viewport.width * game.width / game.safeWidth;
-            newGameHeight = newGameWidth * game.height / game.width;
+            newGameHeight = newGameWidth * game.height  / game.width;
         }
     }
 
@@ -774,18 +728,90 @@ function resizeGame(){
     newGameX = (viewport.width - newGameWidth) / 2;
     newGameY = (viewport.height - newGameHeight) / 2;
 
-    // Set the new padding of the game so it will be centered
+    // Set the new padding of the game so if it will be centered
     game.element.style.margin = newGameY + "px " + newGameX + "px";
+
+    let gameScale = (viewport.height + (game.height - game.safeHeight)) / newGameHeight;
+
+    // resize interface
+
+    if (newGameWidth > viewport.width){
+
+        if (game.height  / game.safeWidth > viewport.height / viewport.width){
+
+            packshot.y = 250.5 + fixH + 50;
+
+            logo.x = 180 + (newGameWidth - viewport.width) / 2 * gameScale;
+            logo.y = 60 + (game.height - game.safeHeight) / 2;
+
+            maskW.y = (game.height - game.safeHeight) / 2;
+            scene.mask = maskW;
+
+            right.y = 0;
+
+            button.y = 561 + fixH;
+        }
+        else{
+            logo.scale.set(1.3);
+
+            logo.x = game.width / 2;
+            logo.y = 120;
+
+            scene.mask = maskH;
+
+            right.y = 100;
+
+            button.y = game.height - (game.safeHeight - 561) - 50;
+        }
+    }
+    else{
+        logo.scale.set(1);
+
+        logo.x = 180;
+        logo.y = 60 + (game.height - game.safeHeight) / 2;
+
+        maskW.y = (game.height - game.safeHeight) / 2;
+        scene.mask = maskW;
+
+        button.y = 561 + fixH;
+
+        right.y = 0;
+    }
+
+    // resize right
+
+    if ((newGameWidth) / 2 * gameScale > viewport.width){
+
+        packshot.scale.set(0.9);
+        packshot.y = 250.5 + fixH + 50;
+
+        right.x = 100 - (newGameWidth - viewport.width) / 2 * gameScale;
+        choices.y = 300;
+        choices.x = right.x / 2 + 50;
+    }
+    else{
+
+        packshot.scale.set(1);
+        packshot.y = 250.5 + fixH;
+
+        right.x = 0;
+
+        choices.y = 0;
+        choices.x = 0;
+    }
+
+    logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
+    packshotIn = addAnimation(packshot, "in", 0, 0, 1.2, 1000, 2000, Easing.outElastic(0.4, 0.5));
 }
 
 window.onresize = (function(){
 
-    // darkIn.reset();
-    // darkIn.start();
-    //
-    // darkIn.on("end", resizeGame);
+    darkIn.reset();
+    darkIn.start();
 
-    resizeGame();
+    darkIn.on("end", resizeGame);
+
+    // resizeGame();
 })
 
 //Make stage interactive so you can click on it too
@@ -793,10 +819,10 @@ window.interactive = true;
 window.hitArea = app.renderer.screen;
 
 //Start game when loader ends
-loader.onComplete.add(() =>{
+loader.onComplete.add(function(){
     resizeGame();
     //Listen for animate update and update the tween manager
-    ticker.add(function(delta) {
+    ticker.add(function(){
         tweenManager.update();
     });
 });
