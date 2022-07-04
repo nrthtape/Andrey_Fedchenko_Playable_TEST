@@ -695,10 +695,13 @@ function resizeGame(){
 
     // Get the dimensions of the viewport
     viewport = {
-
         width: window.innerWidth,
         height: window.innerHeight
     };
+
+    if (viewport.width > detect.maxPhoneWidth){
+        viewport.width = detect.maxPhoneWidth;
+    }
 
     // Determine game size
     if (game.height / game.width > viewport.height / viewport.width) {
