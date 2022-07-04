@@ -696,11 +696,8 @@ function resizeGame(){
     // Get the dimensions of the viewport
     viewport = {
 
-        width: document.body.clientWidth,
-        height: document.body.clientHeight
-
-        // width: window.innerWidth,
-        // height: window.innerHeight
+        width: window.innerWidth,
+        height: window.innerHeight
     };
 
     // Determine game size
@@ -744,6 +741,8 @@ function resizeGame(){
         if (game.height  / game.safeWidth > viewport.height / viewport.width){
 
             packshot.y = 250.5 + fixH + 50;
+
+            logo.scale.set(1);
 
             logo.x = 180 + (newGameWidth - viewport.width) / 2 * gameScale;
             logo.y = 60 + (game.height - game.safeHeight) / 2;
