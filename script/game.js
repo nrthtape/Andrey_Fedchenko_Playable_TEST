@@ -696,8 +696,8 @@ function resizeGame(){
     // Get the dimensions of the viewport
     viewport = {
 
-        width: document.body.clientWidth,
-        height: document.body.clientHeight
+        width: window.outerWidth,
+        height: window.outerHeight
     };
 
     // Determine game size
