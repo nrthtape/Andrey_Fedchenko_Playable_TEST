@@ -806,9 +806,6 @@ function resizeGame(){
         choices.x = 0;
     }
 
-    logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
-    packshotIn = addAnimation(packshot, "in", 0, 0, 1.2, 1000, 2000, Easing.outElastic(0.4, 0.5));
-
     game.element.style.width = newGameWidth + "px";
     game.element.style.height = newGameHeight + "px";
 
@@ -836,6 +833,10 @@ window.hitArea = app.renderer.screen;
 //Start game when loader ends
 loader.onComplete.add(function(){
     resizeGame();
+
+    logoIn = addAnimation(logo, "in", 0, 0, 0.5, 500, 0, Easing.outElastic(0.4, 0.5));
+    packshotIn = addAnimation(packshot, "in", 0, 0, 1.2, 1000, 2000, Easing.outElastic(0.4, 0.5));
+
     //Listen for animate update and update the tween manager
     ticker.add(function(){
         tweenManager.update();
