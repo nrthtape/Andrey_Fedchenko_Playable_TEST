@@ -693,13 +693,11 @@ function resizeGame(){
 
     let viewport, newGameWidth, newGameHeight, newGameX, newGameY;
 
-    let ratio = window.devicePixelRatio || 1;
-
     // Get the dimensions of the viewport
     viewport = {
 
-        width: screen.width * ratio,
-        height: screen.height * ratio
+        width: window.innerWidth,
+        height: window.innerHeight
     };
 
     // Determine game size
