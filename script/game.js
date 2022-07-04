@@ -783,7 +783,7 @@ function resizeGame(){
 
     // resize right
 
-    if ((newGameWidth) / 2 * gameScale > viewport.width){
+    if ((newGameWidth) > viewport.width){
 
         packshot.scale.set(0.9);
         packshot.y = 250.5 + fixH + 50;
