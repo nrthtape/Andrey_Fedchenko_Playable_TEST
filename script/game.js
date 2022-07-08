@@ -795,7 +795,6 @@ function resizeGame(){
     app.stage.scale.set(scaleFactor);
 
 
-
     // let ratio = (game.width / game.height);
     // let scale = window.innerHeight / game.height;
     //
