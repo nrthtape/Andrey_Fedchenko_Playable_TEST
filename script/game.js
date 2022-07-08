@@ -78,7 +78,7 @@ scene.addChild(dark);
 //Load an image and run the `setup` function when it's done
 loader
     .add("images/atlas.json")
-    .add("images/bg_old.png")
+    .add("images/bg.png")
     .add("images/austin_idle.json")
     .add("images/austin_clap.json")
     .load(setup);
@@ -141,7 +141,7 @@ let logoIn, logoOver, logoOut,
 function setup() {
 
     //BG
-    bg = new Sprite(resources["images/bg_old.png"].texture);
+    bg = new Sprite(resources["images/bg.png"].texture);
     scene.addChild(bg);
     // bg = drawItem("bg", [0.5, 0.5], [569, 320], scene);
 
